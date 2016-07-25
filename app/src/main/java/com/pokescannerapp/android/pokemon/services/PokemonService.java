@@ -1,17 +1,17 @@
 package com.pokescannerapp.android.pokemon.services;
 
 import com.pokescannerapp.android.core.models.LocationInput;
-import com.pokescannerapp.android.pokemon.models.Pokemon;
+import com.pokescannerapp.android.pokemon.models.WildPokemon;
 
 import java.util.List;
 
 import retrofit2.http.Body;
-import retrofit2.http.GET;
+import retrofit2.http.POST;
 import rx.Observable;
 
 public interface PokemonService {
 
-    @GET("pokemon/wild")
-    Observable<List<Pokemon>> getWildPokemon(@Body LocationInput location);
+    @POST("pokemon")
+    Observable<List<WildPokemon>> getWildPokemon(@Body LocationInput location);
 
 }
