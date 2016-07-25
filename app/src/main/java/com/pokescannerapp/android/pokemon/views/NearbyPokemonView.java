@@ -1,4 +1,12 @@
 package com.pokescannerapp.android.pokemon.views;
 
-public interface NearbyPokemonView {
+import com.hannesdorfmann.mosby.mvp.MvpView;
+import com.pokescannerapp.android.pokemon.models.WildPokemon;
+
+import java.util.List;
+
+public interface NearbyPokemonView extends MvpView {
+
+    void showPokemon(List<WildPokemon> wildPokemons);
+
 }

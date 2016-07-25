@@ -3,7 +3,7 @@ package com.pokescannerapp.android.core.models;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Location {
+public class LocationInput {
 
     @SerializedName("latitude")
     @Expose
