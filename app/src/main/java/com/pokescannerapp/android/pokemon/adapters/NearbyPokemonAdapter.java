@@ -7,18 +7,22 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.pokescannerapp.android.R;
+import com.pokescannerapp.android.pokemon.models.PokedexEntry;
+import com.pokescannerapp.android.pokemon.models.WildPokemon;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class NearbyPokemonAdapter extends RecyclerView.Adapter {
 
-    ArrayList<String> mStringArrayList;
+    private List<WildPokemon> mWildPokemons;
+    private  List<PokedexEntry> mPokedexEntries;
 
-    public NearbyPokemonAdapter(ArrayList<String> stringArrayList) {
-        mStringArrayList = stringArrayList;
+    public NearbyPokemonAdapter(List<WildPokemon> wildPokemons, List<PokedexEntry> pokedexEntries) {
+        mWildPokemons = wildPokemons;
+        mPokedexEntries = pokedexEntries;
     }
 
     @Override
@@ -29,7 +33,7 @@ public class NearbyPokemonAdapter extends RecyclerView.Adapter {
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        ((PokemonHolder) holder).bind(mStringArrayList.get(position));
+        ((PokemonHolder) holder).bind(mWildPokemons.get(position));
     }
 
     @Override
@@ -47,8 +51,9 @@ public class NearbyPokemonAdapter extends RecyclerView.Adapter {
             ButterKnife.bind(this, itemView);
         }
 
-        public void bind(String name) {
-            tvPokemonName.setText(name);
+        public void bind(WildPokemon wildPokemon) {
+            PokedexEntry pokedexEntry = mPokedexEntries.get(wildPokemon.getPokemon().getPokemonId() - 1);
+            tvPokemonName.setText(pokedexEntry.getName());
         }
     }
 

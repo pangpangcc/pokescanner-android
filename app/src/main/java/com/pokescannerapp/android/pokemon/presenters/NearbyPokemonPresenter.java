@@ -37,6 +37,9 @@ public class NearbyPokemonPresenter extends MvpBasePresenter<NearbyPokemonView> 
 
                     @Override
                     public void onNext(List<WildPokemon> wildPokemons) {
+                        if (isViewAttached()) {
+                            getView().showPokemon(wildPokemons);
+                        }
                     }
                 });
     }

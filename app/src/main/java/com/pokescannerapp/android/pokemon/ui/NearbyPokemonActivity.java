@@ -12,16 +12,23 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.hannesdorfmann.mosby.mvp.MvpActivity;
 import com.pokescannerapp.android.MainApplication;
 import com.pokescannerapp.android.R;
 import com.pokescannerapp.android.core.models.LocationInput;
 import com.pokescannerapp.android.pokemon.adapters.NearbyPokemonAdapter;
+import com.pokescannerapp.android.pokemon.models.PokedexEntry;
 import com.pokescannerapp.android.pokemon.models.WildPokemon;
 import com.pokescannerapp.android.pokemon.presenters.NearbyPokemonPresenter;
 import com.pokescannerapp.android.pokemon.services.PokemonService;
 import com.pokescannerapp.android.pokemon.views.NearbyPokemonView;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -41,9 +48,6 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
     @Inject
     PokemonService mPokemonService;
 
-    @Inject
-    LocationManager mLocationManager;
-
     @BindView(R.id.rv_nearbypokemon)
     RecyclerView rvNearbyPokemon;
 
@@ -53,11 +57,11 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
     Activity mActivity;
     RxLocationManager mRxLocationManager;
     NearbyPokemonPresenter mNearbyPokemonPresenter;
+    List<PokedexEntry> mPokedexEntries;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
 
         ((MainApplication) getApplication()).getAppComponent().inject(this);
         super.onCreate(savedInstanceState);
@@ -74,6 +78,7 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
         rvNearbyPokemon.setLayoutManager(mLayoutManager);
 
         mRxLocationManager  = new RxLocationManager(this);
+        readPokedex();
         locationPermission();
     }
 
@@ -101,7 +106,7 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
 
     @Override
     public void showPokemon(List<WildPokemon> wildPokemons) {
-        mNearbyPokemonAdapter = new NearbyPokemonAdapter(mStringList);
+        mNearbyPokemonAdapter = new NearbyPokemonAdapter(wildPokemons, mPokedexEntries);
         rvNearbyPokemon.setAdapter(mNearbyPokemonAdapter);
     }
 
@@ -117,6 +122,10 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
 
     private void getLocation() {
         mNearbyPokemonPresenter = getPresenter();
+        LocationInput locationInput = new LocationInput();
+        locationInput.setLatitude(19.103078635);
+        locationInput.setLongitude(72.886006189001);
+        mNearbyPokemonPresenter.loadPokemon(locationInput);
         mRxLocationManager.requestLocation(LocationManager.GPS_PROVIDER, new LocationTime(45, TimeUnit.SECONDS)).subscribe(new Subscriber<Location>() {
             @Override
             public void onCompleted() {
@@ -136,5 +145,16 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
                 mNearbyPokemonPresenter.loadPokemon(locationInput);
             }
         });
+    }
+
+    private void readPokedex() {
+        try {
+            InputStream is = getAssets().open("pokedex.json");
+            Reader reader = new InputStreamReader(is);
+            Gson gson = new Gson();
+            mPokedexEntries = gson.fromJson(reader, new TypeToken<List<PokedexEntry>>() {}.getType());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
