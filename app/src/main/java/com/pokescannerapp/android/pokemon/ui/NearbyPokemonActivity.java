@@ -7,10 +7,12 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.widget.RelativeLayout;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -43,6 +45,8 @@ import rx.Subscriber;
 
 public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, NearbyPokemonPresenter> implements NearbyPokemonView {
 
+    private static final String TAG = "NearbyPokemonActivity";
+
     final int MY_PERMISSION_LOCATION = 1001;
 
     @Inject
@@ -51,6 +55,9 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
     @BindView(R.id.rv_nearbypokemon)
     RecyclerView rvNearbyPokemon;
 
+    @BindView(R.id.rl_nearby_pokemon)
+    RelativeLayout rlNearbyPokemon;
+
     ArrayList<String> mStringList = new ArrayList<>();
     NearbyPokemonAdapter mNearbyPokemonAdapter;
 
@@ -58,6 +65,9 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
     RxLocationManager mRxLocationManager;
     NearbyPokemonPresenter mNearbyPokemonPresenter;
     List<PokedexEntry> mPokedexEntries;
+
+    private boolean isFindingPokemon = false;
+    private boolean isFindingLocation = false;
 
 
     @Override
@@ -92,7 +102,6 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     getLocation();
                 } else {
-                    Log.d("test", "boo");
                 }
             }
         }
@@ -106,8 +115,15 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
 
     @Override
     public void showPokemon(List<WildPokemon> wildPokemons) {
-        mNearbyPokemonAdapter = new NearbyPokemonAdapter(wildPokemons, mPokedexEntries);
+        mNearbyPokemonAdapter = new NearbyPokemonAdapter(mActivity, wildPokemons, mPokedexEntries);
         rvNearbyPokemon.setAdapter(mNearbyPokemonAdapter);
+    }
+
+    @Override
+    public void showError(String errorMessage) {
+        Snackbar snackbar = Snackbar
+                .make(rlNearbyPokemon, errorMessage, Snackbar.LENGTH_LONG);
+        snackbar.show();
     }
 
     private void locationPermission() {
@@ -121,12 +137,20 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
     }
 
     private void getLocation() {
+        if(isFindingLocation) {
+            return;
+        }
+        isFindingLocation = true;
         mNearbyPokemonPresenter = getPresenter();
         LocationInput locationInput = new LocationInput();
         locationInput.setLatitude(19.103078635);
         locationInput.setLongitude(72.886006189001);
+//        locationInput.setLatitude(19.103078635);
+//        locationInput.setLongitude(72.886006189001);
+//        locationInput.setLatitude(19.103078635);
+//        locationInput.setLongitude(73.08433516);
         mNearbyPokemonPresenter.loadPokemon(locationInput);
-        mRxLocationManager.requestLocation(LocationManager.GPS_PROVIDER, new LocationTime(45, TimeUnit.SECONDS)).subscribe(new Subscriber<Location>() {
+        mRxLocationManager.requestLocation(LocationManager.GPS_PROVIDER, new LocationTime(120, TimeUnit.SECONDS)).subscribe(new Subscriber<Location>() {
             @Override
             public void onCompleted() {
 
@@ -134,11 +158,15 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
 
             @Override
             public void onError(Throwable e) {
+                isFindingLocation = false;
                 e.printStackTrace();
+                showError("Could not get location");
             }
 
             @Override
             public void onNext(Location location) {
+                isFindingLocation = false;
+                Log.d(TAG, "onNext() called with: " + "location = [" + location + "]");
                 LocationInput locationInput = new LocationInput();
                 locationInput.setLatitude(location.getLatitude());
                 locationInput.setLongitude(location.getLongitude());

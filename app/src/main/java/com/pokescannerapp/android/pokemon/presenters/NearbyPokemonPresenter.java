@@ -1,5 +1,7 @@
 package com.pokescannerapp.android.pokemon.presenters;
 
+import android.util.Log;
+
 import com.hannesdorfmann.mosby.mvp.MvpBasePresenter;
 import com.pokescannerapp.android.core.models.LocationInput;
 import com.pokescannerapp.android.pokemon.models.WildPokemon;
@@ -13,6 +15,8 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 public class NearbyPokemonPresenter extends MvpBasePresenter<NearbyPokemonView> {
+
+    private static final String TAG = "NearbyPokemonPresenter";
 
     PokemonService mPokemonService;
 
@@ -33,10 +37,14 @@ public class NearbyPokemonPresenter extends MvpBasePresenter<NearbyPokemonView> 
                     @Override
                     public void onError(Throwable e) {
                         e.printStackTrace();
+                        if(isViewAttached()) {
+                            getView().showError("Network request failed.");
+                        }
                     }
 
                     @Override
                     public void onNext(List<WildPokemon> wildPokemons) {
+                        Log.d(TAG, "onNext() called with: " + "wildPokemons = [" + wildPokemons + "]");
                         if (isViewAttached()) {
                             getView().showPokemon(wildPokemons);
                         }

@@ -8,5 +8,6 @@ import java.util.List;
 public interface NearbyPokemonView extends MvpView {
 
     void showPokemon(List<WildPokemon> wildPokemons);
+    void showError(String errorMessage);
 
 }
