@@ -77,13 +77,13 @@ public class NearbyPokemonAdapter extends RecyclerView.Adapter {
             mPokedexEntry = mPokedexEntries.get(wildPokemon.getPokemon().getPokemonId() - 1);
             tvPokemonName.setText(mPokedexEntry.getName());
             tvPokemonType.setText(mPokedexEntry.getType());
-            tvPokemonTime.setText((wildPokemon.getTimeTillHiddenMs() / 1000));
+            tvPokemonTime.setText((wildPokemon.getTimeTillHiddenMs() / 1000) + "");
             Picasso.with(mActivity).load(mPokedexEntry.getImg()).into(ivPokemonImage);
             mWildPokemon = wildPokemon;
         }
 
         @OnClick(R.id.rl_nearby_pokemon)
-        void clickNeabyPokemon() {
+        void clickNearbyPokemon() {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:"+ mWildPokemon.getLatitude() +"," + mWildPokemon.getLongitude() +"?q=" + mWildPokemon.getLatitude() + "," + mWildPokemon.getLongitude() + "(" + mPokedexEntry.getName() + ")"));
             mActivity.startActivity(intent);
         }
