@@ -59,8 +59,11 @@ public class NearbyPokemonAdapter extends RecyclerView.Adapter {
 
         @BindView(R.id.iv_pokemon_image)
         ImageView ivPokemonImage;
-        private Activity mActivity;
 
+        @BindView(R.id.tv_pokemon_time)
+        TextView tvPokemonTime;
+
+        private Activity mActivity;
         WildPokemon mWildPokemon;
         PokedexEntry mPokedexEntry;
 
@@ -74,6 +77,7 @@ public class NearbyPokemonAdapter extends RecyclerView.Adapter {
             mPokedexEntry = mPokedexEntries.get(wildPokemon.getPokemon().getPokemonId() - 1);
             tvPokemonName.setText(mPokedexEntry.getName());
             tvPokemonType.setText(mPokedexEntry.getType());
+            tvPokemonTime.setText((wildPokemon.getTimeTillHiddenMs() / 1000));
             Picasso.with(mActivity).load(mPokedexEntry.getImg()).into(ivPokemonImage);
             mWildPokemon = wildPokemon;
         }

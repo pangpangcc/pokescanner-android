@@ -12,7 +12,12 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -52,11 +57,17 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
     @Inject
     PokemonService mPokemonService;
 
+    @Inject
+    LocationManager mLocationManager;
+
     @BindView(R.id.rv_nearbypokemon)
     RecyclerView rvNearbyPokemon;
 
     @BindView(R.id.rl_nearby_pokemon)
     RelativeLayout rlNearbyPokemon;
+
+    @BindView(R.id.tv_nearby_status)
+    TextView tvNearbyStatus;
 
     ArrayList<String> mStringList = new ArrayList<>();
     NearbyPokemonAdapter mNearbyPokemonAdapter;
@@ -93,6 +104,13 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_nearby_pokemon, menu);
+        return true;
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
@@ -107,6 +125,21 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
         }
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_refresh:
+                if(isFindingLocation || isFindingPokemon) {
+                    break;
+                }
+                tvNearbyStatus.setVisibility(View.VISIBLE);
+                rvNearbyPokemon.setVisibility(View.GONE);
+                tvNearbyStatus.setText("Getting location...");
+                locationPermission();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     @NonNull
     @Override
     public NearbyPokemonPresenter createPresenter() {
@@ -115,18 +148,24 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
 
     @Override
     public void showPokemon(List<WildPokemon> wildPokemons) {
+        isFindingPokemon = false;
+        tvNearbyStatus.setVisibility(View.GONE);
+        rvNearbyPokemon.setVisibility(View.VISIBLE);
         mNearbyPokemonAdapter = new NearbyPokemonAdapter(mActivity, wildPokemons, mPokedexEntries);
         rvNearbyPokemon.setAdapter(mNearbyPokemonAdapter);
     }
 
     @Override
     public void showError(String errorMessage) {
+        isFindingLocation = false;
+        isFindingPokemon = false;
         Snackbar snackbar = Snackbar
                 .make(rlNearbyPokemon, errorMessage, Snackbar.LENGTH_LONG);
         snackbar.show();
     }
 
     private void locationPermission() {
+        tvNearbyStatus.setText("Getting location...");
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
@@ -142,14 +181,6 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
         }
         isFindingLocation = true;
         mNearbyPokemonPresenter = getPresenter();
-        LocationInput locationInput = new LocationInput();
-        locationInput.setLatitude(19.103078635);
-        locationInput.setLongitude(72.886006189001);
-//        locationInput.setLatitude(19.103078635);
-//        locationInput.setLongitude(72.886006189001);
-//        locationInput.setLatitude(19.103078635);
-//        locationInput.setLongitude(73.08433516);
-        mNearbyPokemonPresenter.loadPokemon(locationInput);
         mRxLocationManager.requestLocation(LocationManager.GPS_PROVIDER, new LocationTime(120, TimeUnit.SECONDS)).subscribe(new Subscriber<Location>() {
             @Override
             public void onCompleted() {
@@ -165,11 +196,13 @@ public class NearbyPokemonActivity extends MvpActivity<NearbyPokemonView, Nearby
 
             @Override
             public void onNext(Location location) {
+                tvNearbyStatus.setText("Getting pokemons...");
                 isFindingLocation = false;
                 Log.d(TAG, "onNext() called with: " + "location = [" + location + "]");
                 LocationInput locationInput = new LocationInput();
                 locationInput.setLatitude(location.getLatitude());
                 locationInput.setLongitude(location.getLongitude());
+                isFindingPokemon = true;
                 mNearbyPokemonPresenter.loadPokemon(locationInput);
             }
         });
